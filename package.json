@@ -1,0 +1,29 @@
+{
+  "name": "rng",
+  "version": "1.0.0",
+  "description": "rng",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zhs007/RNG.git"
+  },
+  "dependencies": {
+    "libfortuna": "^1.2.15"
+  },
+  "keywords": [
+    "rng"
+  ],
+  "author": "zerrozhao@gmail.com",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/zhs007/RNG/issues"
+  },
+  "homepage": "https://github.com/zhs007/RNG#readme",
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "eslint-config-google": "^0.14.0"
+  }
+}
