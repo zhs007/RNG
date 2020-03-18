@@ -7,13 +7,13 @@
 
 ### 如何使用
 
-1. build docker
+1. build docker.
 
 ``` bash
 docker build -t rng .
 ```
 
-2. generate hash
+2. generate binary hash.
 
 ``` bash
 docker stop rng
