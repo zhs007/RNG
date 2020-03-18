@@ -9,4 +9,6 @@ RUN cd /app \
 
 COPY . /app
 
-WORKDIR /app
+RUN mkdir /app/output
+
+WORKDIR /app/output
