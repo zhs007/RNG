@@ -25,7 +25,7 @@ docker rm rng
 docker run -it --name rng rng sha1sum /app/node_modules/libfortuna/build/Release/fortuna.node
 ```
 
-3. generate binary format file.
+3. generate binary format RNG output files.
 
 ``` sh
 mkdir output
@@ -34,7 +34,7 @@ docker rm rng
 docker run -it --name rng -v $PWD/output:/app/output rng node /app/bin/rnga.js
 ```
 
-3. generate txt format file.
+4. generate txt format RNG output file (for each scaling range).
 
 ``` sh
 mkdir output
@@ -106,11 +106,3 @@ The sha1sum of the iTech certificate record is `f5b667f2cbde7e0045f7fcd1260c8dfa
 ```
 38, 34, 36, 69, 50, 6, 9
 ```
-
-### Binary format file
-
-rnga.zip
-
-### TXT format file.
-
-rngb.zip
