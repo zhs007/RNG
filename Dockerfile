@@ -1,6 +1,6 @@
 FROM node:10
 
-RUN npm i node-gyp -g -d
+RUN npm i node-gyp websocket-bench pm2 -g -d
 
 COPY ./package*.json /app/
 

@@ -106,3 +106,28 @@ The sha1sum of the iTech certificate record is `f5b667f2cbde7e0045f7fcd1260c8dfa
 ```
 38, 34, 36, 69, 50, 6, 9
 ```
+
+### About benchmark
+
+Our game server is based on WebSocket and uses multiple processes.   
+
+You can start a test container for server.  
+
+``` sh
+docker stop serv
+docker rm serv
+docker run -d --name serv -p 3000:3000 rng pm2-docker start /app/bin/serv.js -i 0
+```
+
+Then, you can start a benchmark container.  
+We use an open source benchmark tool, you can view the document from [here](https://github.com/sososoyoung/websocket-bench).
+
+``` sh
+docker stop bench
+docker rm bench
+docker run -it --name bench --link serv:serv rng websocket-bench -a 10000 -c 500 -m 10 -t primus -p websockets -g /app/bin/client.js ws://serv:3000
+```
+
+ In this example, we made 10000 connections (500 connections at the same time), each connection sends 10 messages (10 rng calls).
+
+ We recommend that you use 1 machine as the server, and then use 3 machines for the client test.
