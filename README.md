@@ -7,7 +7,7 @@ The core is written in c, so you need to compile with ``node-gyp``, you need ins
 
 In order to ensure the consistent output of sha1sum, we provide a dockerfile. In the case that all dependencies are consistent, we can get the same hash.
 
-If you use windows, you need to switch docker to the linux container.
+If you use windows, you must use docker and need to switch docker to the linux container.
 
 ### How to use
 

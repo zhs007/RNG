@@ -1,6 +1,6 @@
 {
   "name": "rng",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "rng",
   "main": "index.js",
   "scripts": {
@@ -11,7 +11,8 @@
     "url": "git+https://github.com/zhs007/RNG.git"
   },
   "dependencies": {
-    "libfortuna": "^1.2.15"
+    "libfortuna": "^1.2.15",
+    "ws": "^7.2.3"
   },
   "keywords": [
     "rng"
