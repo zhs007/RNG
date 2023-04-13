@@ -43,6 +43,8 @@ docker rm rng
 docker run -it --name rng -v $PWD/output:/app/output rng node /app/bin/rngb.js
 ```
 
+The results are in the output directory.
+
 ### About libfortuna
 
 libfortuna uses code from the [PostgreSQL](http://www.postgres.org/) database project.
@@ -76,58 +78,138 @@ except nodejs, you need to python 2.x, gcc 4.9 (on linux), and on mac osx also n
 ``` js
 const libfortuna = require('libfortuna');
 
-function randomInt(max) {
-    return libfortuna.randomInt(max);
-}
-
-exports.randomInt = randomInt;
-```
-
-When the actual game wheel is random, we call it this way
-
-``` js
 for (let ii = 0; ii < this.axisnums; ++ii) {
-    lstLastSymbol[ii] = base.randomInt(lstSymbol[ii].length);
+    lstLastSymbol[ii] = libfortuna.randomInt(lstSymbol[ii].length);
 }
 ```
 
 ### Source
 
+core library:
 libfortunajs-1.2.15.tar.gz
+
+grpc server:
+rngserv.zip
 
 ### Binary hash
 
 The binary file compiled by the rng library is `/app/node_modules/libfortuna/build/Release/fortuna.node`.  
 The sha1sum of the iTech certificate record is `f5b667f2cbde7e0045f7fcd1260c8dfa453ae841`.
 
+Because our core library needs to be compiled in c++, the result will be different under different operating systems, you need to use the script we provide under linux to get the exact same hashcode.
+
 
 ### List of scaling ranges
+
+The scaling ranges source
+
+```
+// randomInt(max)
+// return [0, max)
+void randomInt(const Nan::FunctionCallbackInfo<v8::Value>& info) {
+    if (info.Length() != 1) {
+        Nan::ThrowTypeError("randomInt: Wrong number of arguments.");
+
+        return;
+    }
+
+    if (!info[0]->IsNumber()) {
+        Nan::ThrowTypeError("randomInt: Wrong arguments.");
+
+        return;
+    }
+
+    v8::Local<v8::Number> max = info[0].As<v8::Number>();
+    if (max->Value() <= 0) {
+        Nan::ThrowTypeError("randomInt: Invalid max velue.");
+        
+        return;
+    }
+
+    unsigned int maxval = (unsigned int)max->Value();
+
+    unsigned int cr = 0;
+    unsigned long long MAX_RANGE = ((unsigned long long)1) << 32;
+    unsigned long long limit = MAX_RANGE - (MAX_RANGE % maxval);
+    
+    do {
+        fortuna_get_bytes(4, (uint8*)&cr);
+    } while (cr >= limit);
+    
+    v8::Local<v8::Number> num = Nan::New<v8::Number>(cr % maxval);
+    info.GetReturnValue().Set(num);
+}
+```
+
+The sample is
 
 ```
 38, 34, 36, 69, 50, 6, 9
 ```
 
-### About benchmark
 
-Our game server is based on WebSocket and uses multiple processes.   
 
-You can start a test container for server.  
+```
+const libfortuna = require('libfortuna');
+const fs = require('fs');
 
-``` sh
-docker stop serv
-docker rm serv
-docker run -d --name serv -p 3000:3000 rng pm2-docker start /app/bin/serv.js -i 0
+const SCALING_RANGES = [38, 34, 36, 69, 50, 6, 9];
+const MAX_NUMBER = 10000000;
+const BUF_LENGTH = 10000;
+
+/**
+ * genFile - Generate a file for rng
+ * @param {string} fn - This is the file name of the output file
+ * @param {int} range - This is the range of random numbers that need to be generated
+ * @param {int} max - This is the number of random numbers that need to be generated
+ */
+function genFile(fn, range, max) {
+  const fd = fs.openSync(fn, 'w');
+
+  let buf = '';
+  let i = 0;
+  for (; i < max; ++i) {
+    const n = libfortuna.randomInt(range);
+    buf += n.toString() + '\r\n';
+    if (i % BUF_LENGTH == 0) {
+      fs.writeSync(fd, buf, -1, 'utf-8');
+      buf = '';
+    }
+  }
+
+  if ((i - 1) / BUF_LENGTH != 0) {
+    fs.writeSync(fd, buf, -1, 'utf-8');
+  }
+
+  fs.closeSync(fd);
+}
+
+for (let i = 0; i < SCALING_RANGES.length; ++i) {
+  const fn = 'rng_b_' + SCALING_RANGES[i] + '.txt';
+  genFile(fn, SCALING_RANGES[i], MAX_NUMBER);
+
+  console.log('generate ' + fn + ' ok.');
+}
 ```
 
-Then, you can start a benchmark container.  
-We use an open source benchmark tool, you can view the document from [here](https://github.com/sososoyoung/websocket-bench).
 
-``` sh
-docker stop bench
-docker rm bench
-docker run -it --name bench --link serv:serv rng websocket-bench -a 10000 -c 500 -m 10 -t primus -p websockets -g /app/bin/client.js ws://serv:3000
+If you use another development language, you need to process the rng scale yourself, here is an example of golang.
+
 ```
+	maxval := int64(r)
 
- In this example, we made 10000 connections (500 connections at the same time), each connection sends 10 messages (10 rng calls).
+	cr := 0
+	MAX_RANGE := int64(1) << 32
+	limit := MAX_RANGE - (MAX_RANGE % maxval)
 
- We recommend that you use 1 machine as the server, and then use 3 machines for the client test.
+	for {
+		cr = int(plugin.Rngs[0])
+		plugin.Rngs = plugin.Rngs[1:]
+
+		if int64(cr) < limit {
+			break
+		}
+	}
+
+	v := cr % r
+```    
